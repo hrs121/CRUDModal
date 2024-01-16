@@ -20,14 +20,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $address = $_POST["address"][$index];
         $dob = $_POST["dob"][$index];
         $gender = $_POST["gender"][$index];
+        
         $image = $_FILES["image"]["name"][$index];
-        $temp = $_FILES["image"]["tmp_name"][$index];
-        $file = "images/" . $image;
-
-        move_uploaded_file($temp, $file);
+        $imageName = $_FILES["image"]["name"][$index];
+        $imageTmp = $_FILES["image"]["tmp_name"][$index];
+        
+        $imageContent = file_get_contents($imageTmp);
+        $base64Enc = base64_encode($imageContent);
 
         $sql = "INSERT INTO employee (name, email, number,  address, dob, gender, image) 
-            VALUES ('$name', '$email', '$number', '$address', '$dob', '$gender', '$image')";
+            VALUES ('$name', '$email', '$number', '$address', '$dob', '$gender', '$base64Enc')";
 
         if ($conn->query($sql) !== TRUE) {
             echo "Error: " . $sql . "<br>" . $conn->error;
@@ -158,7 +160,10 @@ $conn->close();
                 echo "<td>{$row['address']}</td>";
                 echo "<td>{$row['dob']}</td>";
                 echo "<td>{$row['gender']}</td>";
-                echo "<td><img src='images/{$row['image']}' style='max-width: 100px; max-height: 100px;'></td>";
+                $decImg = base64_decode($row['image']);
+$mime_type = finfo_buffer(finfo_open(), $decImg, FILEINFO_MIME_TYPE);
+$src = 'data:' . $mime_type . ';base64,' . base64_encode($decImg);
+echo "<td><img src='$src' style='max-width: 100px; max-height: 100px;'></td>";
                 echo "<td>
                         <a href='update.php?id={$row['id']}' class='btn btn-primary btn-sm'>Edit</a>
                         <a href='delete.php?id={$row['id']}' class='btn btn-danger btn-sm'>Delete</a>
